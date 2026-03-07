@@ -24,7 +24,7 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
 
 # Thumbnails
 ._*
@@ -97,4 +97,17 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,linux,windows
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
+
+# Claude Code
+.claude/settings.local.json
+.claude/memory.db
+.claude/state/
+.claude/sessions/
+.mcp.json
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.template
 
