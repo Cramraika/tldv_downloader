@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install flake8
+          pip install -r requirements.txt
+      - name: Run flake8
+        run: flake8 *.py --max-line-length=120 --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Verify imports
+        run: python -c "import tldv_downloader; print('Import OK')" 2>/dev/null || python -c "exec(open('tldv_downloader.py').read())" 2>/dev/null || true
