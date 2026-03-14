@@ -1,29 +1,66 @@
+# =============================================
+# TLDV Downloader - CI Pipeline
+# =============================================
+# Lint → Security Audit → Summary
+# =============================================
+
 name: CI
 
 on:
   push:
     branches: [main, master]
+    paths-ignore: ['*.md', 'docs/**', '.claude/**', '.vscode/**']
   pull_request:
     branches: [main, master]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  lint:
-    name: Lint
+  ci:
+    name: CI Quality Gates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: 'pip'
+
       - name: Install dependencies
+        run: pip install -r requirements.txt flake8 pip-audit
+
+      - name: Lint (flake8)
+        id: lint
         run: |
-          pip install flake8
-          pip install -r requirements.txt
-      - name: Run flake8
-        run: flake8 *.py --max-line-length=120 --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 *.py --max-line-length=120 --count --show-source --statistics \
+            --select=E9,F63,F7,F82,E1,E4,W6
+
       - name: Verify imports
-        run: python -c "import tldv_downloader; print('Import OK')" 2>/dev/null || python -c "exec(open('tldv_downloader.py').read())" 2>/dev/null || true
+        id: imports
+        run: python -c "import requests; print('✅ requests imported')"
+
+      - name: Security audit (pip-audit)
+        id: security
+        continue-on-error: true
+        run: pip-audit --desc 2>&1 | head -50
+
+      - name: CI Summary
+        if: always()
+        run: |
+          echo "## CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ steps.lint.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Import Verify | ${{ steps.imports.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Audit | ${{ steps.security.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${GITHUB_SHA::7}\`" >> $GITHUB_STEP_SUMMARY
