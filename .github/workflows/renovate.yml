@@ -1,0 +1,44 @@
+name: Renovate
+# Self-hosted Renovate via GitHub Actions — no GitHub App installation needed.
+# Each repo gets this workflow + a renovate.json config file.
+# The workflow is triggered weekly (Mon before 5am IST = Sun 23:30 UTC) and on-demand.
+
+on:
+  schedule:
+    # Every Monday at 03:30 IST = Sunday 22:00 UTC
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: false
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - debug
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v42.0.9
+        with:
+          configurationFile: renovate.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_ONBOARDING: 'false'
+          RENOVATE_REQUIRE_CONFIG: 'ignored'
+          RENOVATE_PLATFORM: 'github'
+          RENOVATE_GIT_AUTHOR: 'Renovate Bot <bot@renovate.com>'
