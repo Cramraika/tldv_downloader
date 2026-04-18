@@ -1,6 +1,24 @@
 # 🎬 TLDV Video Downloader
 
-A powerful Python script to download videos from tldv.io with support for both single and parallel batch downloads using N_m3u8DL-RE or FFmpeg.
+> **Export your tldv.io meeting recordings to local MP4 — single or bulk, parallel, resumable.**
+
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/Cramraika?logo=github&label=Sponsor)](https://github.com/sponsors/Cramraika)
+[![Stars](https://img.shields.io/github/stars/Cramraika/tldv_downloader?style=social)](https://github.com/Cramraika/tldv_downloader/stargazers)
+[![License](https://img.shields.io/github/license/Cramraika/tldv_downloader)](./LICENSE)
+[![Issues](https://img.shields.io/github/issues/Cramraika/tldv_downloader)](https://github.com/Cramraika/tldv_downloader/issues)
+
+Download videos from tldv.io at your own pace — keep your recordings for offline watch, archives, or compliance. Single downloads or parallel batch, with smart resume and metadata preservation. Works on Windows, macOS, and Linux.
+
+## Who is this for?
+
+- **Sales teams** archiving customer conversations for review
+- **Researchers** collecting interview recordings
+- **Solo operators** keeping a local library of their meetings
+- **Anyone** who doesn't want their recordings locked behind a SaaS subscription
+
+## 💖 Sponsor
+
+If this saves you time, [sponsor on GitHub](https://github.com/sponsors/Cramraika) — your support funds ongoing maintenance and new features (UI wrapper, Whisper transcription, Obsidian export). Or [reach out](https://chinmayramraika.in) about enterprise/custom work.
 
 ## ✨ Features
 
