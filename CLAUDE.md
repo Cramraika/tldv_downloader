@@ -8,83 +8,112 @@
 
 **Sources**: `~/.claude/conventions/universal-claudemd.md` (laws, MCP routing, lifecycle, rent rubric) + `~/.claude/conventions/project-hygiene.md` (doc placement, cleanup, local-workspaces). Read relevant sections before significant work. Re-audit due **2026-07-19**. Sync: `~/.claude/scripts/sync-preambles.py`.
 
+## One-liner
+Cross-platform Python utility that exports tldv.io meeting recordings to local MP4 via HLS stream capture -- single or batch, parallel, resumable.
+
+## References
+- Universal laws: `~/.claude/conventions/universal-claudemd.md`
+- Project hygiene: `~/.claude/conventions/project-hygiene.md`
+- Environments: `docs/ENVIRONMENTS.md`
+- Upstream (HLS tool): https://github.com/nilaoda/N_m3u8DL-RE
+- GitHub: https://github.com/Cramraika/tldv_downloader (public, 13★/4 forks, unarchived 2026-04-19)
+- Sponsors: https://github.com/sponsors/Cramraika
+
+## Status & Tier
+- **Tier: C (stable utility)** -- single-file script, feature-complete for current scope
+- **Sponsor-ready OSS** -- public, FUNDING.yml live, README relaunched with sponsor CTA (commit `ebfbee7`)
+- Repo was archived and was just **unarchived on 2026-04-19** to accept sponsorships + light maintenance
+
 ## Products
 
 | Product | What It Does | Who Uses It | Status |
 |---------|-------------|-------------|--------|
-| Single Meeting Downloader | Downloads one TLDV meeting recording by URL using HLS stream capture | Developer (Chinmay) | Inactive |
-| Batch Downloader | Parallel downloads of multiple meeting recordings from a list of URLs | Developer (Chinmay) | Inactive |
-
-## Product Details
+| Single Meeting Downloader | Downloads one TLDV meeting recording by URL using HLS stream capture | OSS users + developer | Stable |
+| Batch Downloader | Parallel downloads of multiple meeting recordings from a list of URLs | OSS users + developer | Stable |
 
 ### Single Meeting Downloader
-- **User journey**: Get auth token from tldv.io browser session (Network tab) -> Run script with meeting URL -> Script fetches meeting metadata from TLDV API -> Extracts HLS stream URL -> Downloads via N_m3u8DL-RE or FFmpeg -> Saves as MP4 with sanitized filename
-- **Success signals**: Meeting video saved locally within minutes; filename includes meeting title and date
-- **Failure signals**: Auth token expired (401); HLS stream URL changed format; download tool not on PATH
+- **User journey**: Get auth token from tldv.io browser session (Network tab) -> Run script with meeting URL -> Script fetches meeting metadata from TLDV API -> Extracts HLS stream URL -> Downloads via N_m3u8DL-RE or FFmpeg -> Saves as MP4 with sanitized filename (includes meeting title + date)
+- **Success signals**: Meeting video saved locally within minutes; metadata JSON alongside
+- **Failure signals**: Auth token expired (401); HLS stream URL format drift; download tool missing from PATH
 
 ### Batch Downloader
-- **User journey**: Prepare list of meeting URLs -> Run in batch mode -> Downloads execute in parallel (ThreadPoolExecutor) -> Progress shown per download -> All files saved to local directory
-- **Success signals**: All meetings downloaded without manual babysitting; no partial/corrupt files
-- **Failure signals**: Some downloads fail silently; parallel downloads overwhelm network; duplicate downloads
+- **User journey**: Prepare list of meeting URLs -> Run in batch mode -> ThreadPoolExecutor downloads in parallel (1-8 workers) -> Per-download progress -> All files saved to chosen directory
+- **Success signals**: All meetings downloaded without babysitting; no partial/corrupt files
+- **Failure signals**: Silent per-download failures; parallel workers saturate network; duplicate downloads
 
-## Tech Reference
+## Active Role-Lanes
+- **Engineer** (primary) -- Python maintenance, CVE bumps, upstream API drift fixes
+- **Writer / Marketer** (secondary) -- README positioning, sponsor CTA copy, changelog on release
+- **Support** (ad-hoc) -- triage issues from public users (13★, 4 forks -- real inbound expected)
 
-### Stack
-- **Runtime**: Python 3.7+ (single script: `tldv_downloader.py`)
-- **HTTP**: requests library
-- **Download tools**: N_m3u8DL-RE (preferred) or FFmpeg for HLS stream downloading
-- **Parallelism**: concurrent.futures.ThreadPoolExecutor
-- **Tier**: C (Stable/Maintenance) -- not actively used
+## Stack
+- **Runtime**: Python 3.7+ (single-file: `tldv_downloader.py`, 526 lines)
+- **HTTP**: `requests` (pinned via `requirements.txt`)
+- **Download tools**: N_m3u8DL-RE (preferred, HLS-aware, parallel segments) or FFmpeg (fallback)
+- **Parallelism**: `concurrent.futures.ThreadPoolExecutor`
 
-### File Organization
-- Never save working files to root folder
-- `tldv_downloader.py` - Main script (single-file architecture)
-- `requirements.txt` - Python dependency (requests)
-
-### Build & Test
+## Build / Test / Deploy
 ```bash
 # Install
 pip install -r requirements.txt
 
 # Run
-python tldv_downloader.py              # Interactive mode
-python tldv_downloader.py --help       # Show auth token help
+python tldv_downloader.py              # Interactive (single or batch)
+python tldv_downloader.py --help       # Auth-token instructions
 ```
+No deployment -- local CLI only. Distribution is the repo + README.
 
-### Prerequisites
-- N_m3u8DL-RE (recommended) or FFmpeg must be installed and on PATH
-- Auth token obtained from tldv.io browser session (Network tab)
+## Key Directories
+- `tldv_downloader.py` -- main script (single-file architecture)
+- `requirements.txt` -- sole Python dependency
+- `.github/` -- `ci.yml`, `codeql.yml`, `renovate.yml`, `FUNDING.yml`, ISSUE_TEMPLATE, CODEOWNERS, PR template, dependabot
+- `docs/ENVIRONMENTS.md` -- setup + troubleshooting for end-users
+- `.claude/settings.json` -- project-scoped plugin profile
 
-### n8n Workflow Automation
+## Dependency Graph
+- **Upstream (runtime, external)**: `tldv.io` API (`gw.tldv.io/v1/meetings/{id}/watch-page`), HLS/m3u8 stream endpoints, `N_m3u8DL-RE` CLI, FFmpeg CLI
+- **Upstream (library)**: `requests` only
+- **Downstream**: personal archival / OSS users downloading own meetings; no programmatic consumers
 
-This project can trigger and receive n8n workflows at `https://n8n.chinmayramraika.in`.
+## Roadmap (sponsor-funded)
+From README sponsor CTA -- held until sponsorship materializes:
+- **Whisper transcription** -- auto-transcribe downloaded MP4s
+- **Obsidian export** -- write meeting notes + links into an Obsidian vault
+- **UI wrapper** -- GUI for non-CLI users (Tauri or Electron candidate)
+- **Maintenance floor**: keep up with tldv.io API drift + CVE bumps
 
-- **Webhook URL:** Set in `N8N_WEBHOOK_URL` env var
-- **API Key:** Set in `N8N_API_KEY` env var (unique per project)
-- **Auth Header:** `X-API-Key: <N8N_API_KEY>`
-- **Workflow repo:** github.com/Cramraika/n8n-workflows (private)
+## Observability
+**n/a** -- local CLI utility. No telemetry, no error reporting, no metrics. If a VPS deployment is ever added, the stack in § External Services below applies.
 
-## VPS Services Integration
+## Security & Secrets
+- **No envs required at runtime** -- auth token is prompted interactively from the user (copy-paste from browser Network tab)
+- Never hardcode tokens in the script or in URL-list files
+- `.env` / `.env.*` denied by `.claude/settings.json`
+- `SECURITY.md` present -- report via `chinu.ramraika@gmail.com`
+- CodeQL scan runs on push + weekly (Monday 03:30 UTC)
 
-This repo is **not deployed on VPS** (runs locally). When VPS deployment is needed, the following services are available:
+## Deployment Environments
+- **Local only** -- no staging, no prod. End-users clone + run.
+- **CI**: GitHub Actions on `ubuntu-latest` / Python 3.11 -- flake8 (E9,F63,F7,F82) + import verify + `pip-audit` (non-blocking) + markdown summary
 
-### Available Observability Stack
-- **GlitchTip** (errors.chinmayramraika.in): Create a project to capture errors
-- **Loki + Grafana** (grafana.chinmayramraika.in): Container log aggregation via Promtail Docker SD
-- **Uptime Kuma** (status.chinmayramraika.in): Add a monitor for uptime tracking
-- **Netdata** (monitor.chinmayramraika.in): System metrics + custom alarms
+## External Services (MCPs, integrations)
+- **GitHub Sponsors** -- FUNDING.yml live; sponsor link in README + CLAUDE.md
+- **n8n** (`https://n8n.chinmayramraika.in`) -- optional webhook integration wired via `N8N_WEBHOOK_URL` + `N8N_API_KEY` envs (not used by current script; reserved for future workflow triggers)
+- **Renovate + Dependabot** -- automated dep bumps
+- **GitHub Issues + Discussions** -- primary support surface
 
-### Available Notifications
-- **Slack**: Deploys → #deploys, Errors → #errors, CI → #ci, Kuma alerts → #cron
-- **Telegram**: Critical alerts → @vpsmgr_bot (chat 710228663)
-- **Email**: Netdata + Uptime Kuma → chinu.ramraika@gmail.com
+## Past (recent history)
+- **2026-04-19** -- repo unarchived; FUNDING.yml added; README relaunched with sponsor CTA + Who-is-this-for + social proof badges (commit `ebfbee7`)
+- **2026-04-13 -> 04-18** -- hygiene sweep (CODEOWNERS, PR template, SECURITY.md, issue templates, CodeQL, Dependabot, Renovate)
+- **2026-04-06** -- requests 2.32.5 -> 2.33.0 (CVE bump)
+- **2026-03** -- CI pipeline upgraded to ASM quality standard; flake8 + pip-audit
+- Original script committed 2025; current feature set stable since.
 
-### Available Secrets Management
-- **Infisical** (secrets.chinmayramraika.in): Create a workspace when deploying to VPS
-- Delivery: Infisical Agent on VPS renders env file → docker-compose env_file mount
+## Known Limitations
+- Auth token expires with browser session -- no refresh flow
+- HLS URL format is reverse-engineered; tldv.io server change may break the extractor until patched
+- No resume-from-partial for a single file (only batch-level resume by rerunning)
+- No tests -- script is interactive; coverage would require mocking the full TLDV auth+HLS flow
 
-### Security Rules
-- NEVER hardcode API keys, secrets, or credentials in any file
-- NEVER pass credentials as inline env vars in Bash commands
-- NEVER commit .env, .claude/settings.local.json, or .mcp.json to git
-- Always validate user input at system boundaries
+## Deviations from Universal Laws
+None. Standard hygiene applies: no hardcoded secrets, conventional commits, no `--no-verify`, destructive ops require explicit user sign-off, append-only changelog via git history (no `CHANGELOG.md` since no tagged releases yet).
