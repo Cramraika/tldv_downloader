@@ -1,0 +1,17 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "usernamehw.errorlens",
+        "github.vscode-github-actions"
+    ],
+    "unwantedRecommendations": [
+        "golang.go",
+        "bradlc.vscode-tailwindcss",
+        "mongodb.mongodb-vscode",
+        "ckolkman.vscode-postgres",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker"
+    ]
+}
