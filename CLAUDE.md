@@ -1,7 +1,7 @@
 # TLDV Downloader
 
 ## Claude Preamble (preloaded universal rules)
-<!-- VERSION: 2026-04-18-v3 -->
+<!-- VERSION: 2026-04-18-v4 -->
 <!-- SYNC-SOURCE: ~/.claude/conventions/universal-claudemd.md -->
 
 ### Laws
@@ -67,6 +67,11 @@
 
 ### Drift detection
 On first code-edit of the session, verify this preamble's VERSION tag matches `~/.claude/conventions/universal-claudemd.md` § 9. If stale, propose sync to user before proceeding.
+
+### Re-audit status (check at session start in global workspace)
+Last run: **2026-04-18-v1**. Next due: **2026-07-18** OR when `/context` > 50%, whichever first.
+Methodology spec: `~/.claude/specs/2026-04-18-plugin-surface-audit.md`.
+On session start in `~/Documents/Github/`, if today's date > next-due OR context feels heavy: remind user "Plugin audit overdue — want to run it per methodology spec?"
 
 ### Full detail
 - Universal laws + architecture: `~/.claude/conventions/universal-claudemd.md`
