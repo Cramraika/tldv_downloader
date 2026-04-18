@@ -39,7 +39,6 @@
     "architecture-design@jmanhype-marketplace": false,
     "asana@claude-plugins-official": false,
     "attune@claude-night-market": false,
-    "autofix-bot@claude-plugins-official": false,
     "b2b-project-shipper@cc-marketplace": false,
     "backend-api-security@claude-code-workflows": false,
     "backend-api-security@kivilaid-plugin-marketplace": false,
@@ -229,7 +228,6 @@
     "rust-analyzer-lsp@claude-plugins-official": false,
     "safety-compliance@jmanhype-marketplace": false,
     "sanctum@claude-night-market": false,
-    "sanity-plugin@claude-plugins-official": false,
     "scribe@claude-night-market": false,
     "scry@claude-night-market": false,
     "searchfit-seo@claude-plugins-official": false,
@@ -281,7 +279,6 @@
     "web-dev@cc-marketplace": false,
     "web-scripting@claude-code-workflows": false,
     "web-scripting@kivilaid-plugin-marketplace": false,
-    "workflow-optimizer@cc-marketplace": false,
-    "zoominfo@claude-plugins-official": false
+    "workflow-optimizer@cc-marketplace": false
   }
 }
