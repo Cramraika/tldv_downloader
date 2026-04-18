@@ -1,7 +1,7 @@
 # TLDV Downloader
 
 ## Claude Preamble (preloaded universal rules)
-<!-- VERSION: 2026-04-18-v4 -->
+<!-- VERSION: 2026-04-18-v5 -->
 <!-- SYNC-SOURCE: ~/.claude/conventions/universal-claudemd.md -->
 
 ### Laws
@@ -72,6 +72,15 @@ On first code-edit of the session, verify this preamble's VERSION tag matches `~
 Last run: **2026-04-18-v1**. Next due: **2026-07-18** OR when `/context` > 50%, whichever first.
 Methodology spec: `~/.claude/specs/2026-04-18-plugin-surface-audit.md`.
 On session start in `~/Documents/Github/`, if today's date > next-due OR context feels heavy: remind user "Plugin audit overdue — want to run it per methodology spec?"
+
+### Dynamic maintenance (self-adjust)
+Environment is NOT static. Claude proactively handles:
+- **Repo added/removed** → run `python3 ~/.claude/scripts/inventory-sync.py` to detect drift; propose inventory + profile + CLAUDE.md preamble
+- **Stack change** (manifest drift) → narrow stack-line update in CLAUDE.md
+- **universal-claudemd.md bumped** → run `python3 ~/.claude/scripts/sync-preambles.py` to propagate to 22 files
+- **New marketplace / plugin surge** → propose audit via methodology spec
+- **MCP added** → add routing hint; sync preambles
+- See `~/.claude/conventions/universal-claudemd.md` § 14 for the full protocol
 
 ### Full detail
 - Universal laws + architecture: `~/.claude/conventions/universal-claudemd.md`
