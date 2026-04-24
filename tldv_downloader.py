@@ -6,12 +6,16 @@ Enhanced version with better error handling, filename sanitization, and N_m3u8DL
 
 import re
 import json
+import tempfile
 import requests
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+
+GAIA_BASE = "https://gaia.tldv.io"
+GW_BASE = "https://gw.tldv.io"
 
 
 class TLDVDownloader:
@@ -55,7 +59,7 @@ class TLDVDownloader:
 
     def fetch_meeting_data(self, meeting_id, auth_token):
         """Fetch meeting data from TLDV API"""
-        api_url = f"https://gw.tldv.io/v1/meetings/{meeting_id}/watch-page?noTranscript=true"
+        api_url = f"{GW_BASE}/v1/meetings/{meeting_id}/watch-page?noTranscript=true"
 
         headers = {
             "Authorization": auth_token,
@@ -77,6 +81,69 @@ class TLDVDownloader:
         except requests.exceptions.RequestException as e:
             raise ValueError(f"Network error: {e}") from e
 
+    @staticmethod
+    def _caesar_shift(text, shift):
+        """Apply caesar shift on letters; digits/punctuation untouched."""
+        out = []
+        for ch in text:
+            if 'a' <= ch <= 'z':
+                out.append(chr((ord(ch) - ord('a') + shift) % 26 + ord('a')))
+            elif 'A' <= ch <= 'Z':
+                out.append(chr((ord(ch) - ord('A') + shift) % 26 + ord('A')))
+            else:
+                out.append(ch)
+        return ''.join(out)
+
+    def fetch_decoded_playlist(self, meeting_id, auth_token):
+        """Fetch the signed HLS playlist from gaia and decode obfuscated segment URLs.
+
+        Flow:
+          GET gaia.tldv.io/v1/meetings/{id}/playlist.m3u8 -> 302 puttanesca proxy ->
+          media playlist with #TLDVCONF:<expires>,<shift>,<prefix> header and
+          caesar-shifted segment filenames. Decode back to absolute signed S3 URLs.
+        """
+        api_url = f"{GAIA_BASE}/v1/meetings/{meeting_id}/playlist.m3u8"
+        headers = {"Authorization": auth_token, "Accept": "application/vnd.apple.mpegurl"}
+        try:
+            response = self.session.get(api_url, headers=headers, timeout=30, allow_redirects=True)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            code = getattr(e.response, "status_code", None)
+            if code == 401:
+                raise ValueError("Unauthorized: Invalid auth token") from e
+            if code == 403:
+                raise ValueError("Forbidden: insufficient permission for this meeting") from e
+            if code == 404:
+                raise ValueError("Meeting playlist not found") from e
+            raise ValueError(f"Playlist API error: {e}") from e
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Network error fetching playlist: {e}") from e
+
+        raw = response.text
+        prefix = ""
+        shift = 0
+        out_lines = ["#EXTM3U"]
+        for line in raw.splitlines():
+            if line.startswith("#TLDVCONF:"):
+                parts = line[len("#TLDVCONF:"):].split(",", 2)
+                if len(parts) >= 3:
+                    try:
+                        shift = int(parts[1])
+                    except ValueError:
+                        shift = 0
+                    prefix = parts[2]
+                continue
+            if line.startswith("#EXTM3U"):
+                continue
+            if line.startswith("#") or not line.strip():
+                out_lines.append(line)
+            else:
+                out_lines.append(prefix + self._caesar_shift(line, shift))
+
+        if not prefix:
+            raise ValueError("Playlist did not contain #TLDVCONF header; format may have changed")
+        return "\n".join(out_lines) + "\n"
+
     def parse_meeting_info(self, data):
         """Parse meeting information from API response"""
         meeting = data.get("meeting", {})
@@ -84,10 +151,7 @@ class TLDVDownloader:
 
         name = meeting.get("name", "TLDV_Meeting")
         created_at = meeting.get("createdAt")
-        source_url = video.get("source")
-
-        if not source_url:
-            raise ValueError("Video source URL not found in meeting data")
+        source_url = video.get("source")  # informational only; unsigned, not used for download
 
         # Parse date
         try:
@@ -140,31 +204,32 @@ class TLDVDownloader:
         preferred = next((d for d in available if d['preferred']), available[0])
         return preferred
 
-    def download_with_n_m3u8dl_re(self, source_url, output_file):
-        """Download using N_m3u8DL-RE"""
+    def download_with_n_m3u8dl_re(self, playlist_path, output_file):
+        """Download using N_m3u8DL-RE from a local decoded playlist file."""
         command = [
             'N_m3u8DL-RE',
-            source_url,
+            str(playlist_path),
             '--save-name', Path(output_file).stem,
             '--save-dir', str(Path(output_file).parent),
-            '--thread-count', '8',  # Parallel downloads
+            '--thread-count', '8',
             '--download-retry-count', '3',
-            '--auto-select',  # Auto select best quality
-            '--no-log'  # Reduce log verbosity
+            '--auto-select',
+            '--no-log',
         ]
-
         return self._run_download_command(command, output_file)
 
-    def download_with_ffmpeg(self, source_url, output_file):
-        """Download using ffmpeg"""
+    def download_with_ffmpeg(self, playlist_path, output_file):
+        """Download using ffmpeg from a local decoded playlist file."""
         command = [
             'ffmpeg',
-            '-i', source_url,
+            '-protocol_whitelist', 'file,http,https,tcp,tls',
+            '-allowed_extensions', 'ALL',
+            '-i', str(playlist_path),
             '-c', 'copy',
-            '-y',  # Overwrite output file
-            str(output_file)
+            '-bsf:a', 'aac_adtstoasc',
+            '-y',
+            str(output_file),
         ]
-
         return self._run_download_command(command, output_file)
 
     def _run_download_command(self, command, output_file):
@@ -321,11 +386,26 @@ class TLDVDownloader:
             metadata_name = f"{info['timestamp']}_{info['name']}"
             self.save_metadata(info['full_data'], output_path / metadata_name)
 
-            # Download video
-            if downloader['name'] == 'N_m3u8DL-RE':
-                success = self.download_with_n_m3u8dl_re(info['source_url'], output_file)
-            else:
-                success = self.download_with_ffmpeg(info['source_url'], output_file)
+            # Fetch and decode the secured HLS playlist
+            print("🔓 Fetching secured playlist...")
+            decoded_playlist = self.fetch_decoded_playlist(meeting_id, auth_token)
+
+            with tempfile.NamedTemporaryFile(
+                mode='w', suffix='.m3u8', delete=False, encoding='utf-8'
+            ) as tmp:
+                tmp.write(decoded_playlist)
+                playlist_path = Path(tmp.name)
+
+            try:
+                if downloader['name'] == 'N_m3u8DL-RE':
+                    success = self.download_with_n_m3u8dl_re(playlist_path, output_file)
+                else:
+                    success = self.download_with_ffmpeg(playlist_path, output_file)
+            finally:
+                try:
+                    playlist_path.unlink()
+                except OSError:
+                    pass
 
             if success:
                 print(f"\n🎉 Successfully downloaded: {output_file}")
