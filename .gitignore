@@ -125,3 +125,11 @@ venv/
 # Downloaded artifacts
 *.mp4
 
+
+# Tooling output dirs (per memory rule §2.3)
+.ast-grep/
+.cgcignore
+.claude/skills/
+.gitnexus/
+.gitnexusignore
+.serena/
