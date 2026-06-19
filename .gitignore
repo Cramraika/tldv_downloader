@@ -133,3 +133,4 @@ venv/
 .gitnexus/
 .gitnexusignore
 .serena/
+graphify-out/
