@@ -16,7 +16,7 @@ Download videos from tldv.io at your own pace — keep your recordings for offli
 - **Solo operators** keeping a local library of their meetings
 - **Anyone** who doesn't want their recordings locked behind a SaaS subscription
 
-## 💖 Sponsor
+## 💖 Support
 
 If this saves you time, [sponsor on GitHub](https://github.com/sponsors/Cramraika) — your support funds ongoing maintenance and new features (UI wrapper, Whisper transcription, Obsidian export). Or [reach out](https://chinmayramraika.in) about enterprise/custom work.
 
@@ -233,7 +233,9 @@ Feel free to submit issues, feature requests, or pull requests!
 
 ## 📄 License
 
-This project is for educational purposes. Respect tldv.io's terms of service.
+MIT — free to use, modify, and distribute. See [LICENSE](./LICENSE). © 2026 Vagary Labs.
+
+Please use responsibly and respect tldv.io's terms of service (see Disclaimer below).
 
 ## ⚠️ Disclaimer
 
