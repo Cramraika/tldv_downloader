@@ -1,11 +1,12 @@
-[project]
-name = "tldv_downloader"
-version = "0.0.0"
-description = "Local tooling marker — added 2026-05-05 for deptry compatibility (see universal-claudemd.md §44)"
-requires-python = ">=3.10"
+# Local tooling marker — added 2026-05-05 for deptry compatibility (see universal-claudemd.md §44).
+# IMPORTANT: NO [project] table on purpose. An empty [project] makes deptry extract
+# deps from [project] (finding ZERO) and IGNORE requirements.txt, so every real
+# requirements.txt dep shows as a DEP001 false-positive (the marker-template bug
+# fixed 2026-06-23). With no [project], deptry scans requirements.txt — the real
+# dependency source for this repo.
 
 [tool.deptry]
-# Universal-default deptry config (v37)
+# Universal-default deptry config (v37). Deps are read from requirements.txt.
 ignore = ["DEP002", "DEP003"]  # transitive deps; adjust per-repo
 extend_exclude = ["tests", "docs", "scripts"]
 
