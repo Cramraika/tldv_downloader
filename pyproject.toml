@@ -11,7 +11,16 @@ ignore = ["DEP002", "DEP003"]  # transitive deps; adjust per-repo
 extend_exclude = ["tests", "docs", "scripts"]
 
 [tool.vulture]
-# Universal-default vulture config (v37)
+# Universal-default vulture config (v37 + OW-503 vendored-exclude hardening).
+# The vendored excludes stop vulture recursing into .venv/site-packages/node_modules —
+# a deeply-nested generated file there (e.g. sympy resolvent_lookup.py, AST depth 568)
+# blows Python's recursion limit and aborts the whole scan (OW-503).
 min_confidence = 80
 ignore_decorators = ["@app.route", "@router.", "@pytest.fixture"]
-exclude = ["tests/", "migrations/"]
+exclude = [
+    "tests/", "migrations/",
+    ".venv/", "venv/", "*/.venv/", "*/venv/",
+    "site-packages/", "*/site-packages/",
+    "node_modules/", "*/node_modules/",
+    ".git/", "*/.next/", "build/", "dist/", "__pycache__/",
+]
