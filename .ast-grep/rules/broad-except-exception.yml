@@ -1,0 +1,13 @@
+# Fleet debt rule (OW-507 / CI4) — added 2026-06-23
+# Flags broad `except Exception` clauses (silent broad catches hide failures).
+id: broad-except-exception
+language: python
+rule:
+  kind: except_clause
+  has:
+    pattern: Exception
+    stopBy: end
+note: |
+  Broad `except Exception` — prefer specific exception types, and ensure the
+  handler logs or re-raises. A silent broad catch hides failures.
+  False positive OK: top-level guards / optional-dependency shims.

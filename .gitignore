@@ -127,7 +127,9 @@ venv/
 
 
 # Tooling output dirs (per memory rule §2.3)
-.ast-grep/
+# ast-grep: track sgconfig.yml + .ast-grep/rules/ (curated fleet-debt rules); ignore only runtime scan output
+.ast-grep/last-scan.json
+.ast-grep/last-scan.log
 .cgcignore
 .claude/skills/
 .gitnexus/
