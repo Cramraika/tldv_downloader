@@ -24,6 +24,9 @@ hold without a Read.
 
 <!-- END PLAYBOOKS BLOCK -->
 
+## License classification: free-OSS (MIT)
+`tldv_downloader` is a sponsor-ready public OSS utility (MIT) — matches the `pulseboard-desktop` posture, NOT commercial-bound (corrects OW-614's framing per `commercial-bound.md` line 39-43, which lists tldv_downloader under sponsor-ready-public not commercial-bound). The §50.2 cgc-over-gitnexus guard still applies: any redistributed graph derivative MUST come from CGC (`codegraphcontext`, MIT), never GitNexus (PolyForm-NC). This in-repo line is the routing signal §50.2 wants.
+
 ## Identity & Role
 
 `tldv_downloader` is a **cross-platform Python utility** that exports tldv.io meeting recordings to local MP4 via HLS stream capture (single or batch, parallel, resumable). Public Cramraika org repo (13★ / 4 forks); MIT; FUNDING.yml live. **Unarchived 2026-04-19** to accept sponsorships + light maintenance.
