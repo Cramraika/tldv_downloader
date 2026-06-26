@@ -1,9 +1,7 @@
-# =============================================
-# TLDV Downloader - CI Pipeline
-# =============================================
-# Lint → Security Audit → Summary
-# =============================================
-
+# Thin caller -> Cramraika/.github reusable Python CI.
+# Migrated to the fleet reusable-workflow library (2026-06-26). Only the trigger
+# block + language inputs are repo-specific; the CI logic lives in the reusable
+# workflow. Preserves the prior paths-ignore + push/PR-to-main/master semantics.
 name: CI
 
 on:
@@ -13,54 +11,14 @@ on:
   pull_request:
     branches: [main, master]
 
-permissions:
-  contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   ci:
-    name: CI Quality Gates
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt flake8 pip-audit
-
-      - name: Lint (flake8)
-        id: lint
-        run: |
-          flake8 *.py --max-line-length=120 --count --show-source --statistics \
-            --select=E9,F63,F7,F82
-
-      - name: Verify imports
-        id: imports
-        run: python -c "import requests; print('✅ requests imported')"
-
-      - name: Security audit (pip-audit)
-        id: security
-        continue-on-error: true
-        run: pip-audit --desc 2>&1 | head -50
-
-      - name: CI Summary
-        if: always()
-        run: |
-          echo "## CI Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint | ${{ steps.lint.outcome }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Import Verify | ${{ steps.imports.outcome }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Audit | ${{ steps.security.outcome }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${GITHUB_SHA::7}\`" >> $GITHUB_STEP_SUMMARY
+    uses: Cramraika/.github/.github/workflows/ci-python.yml@main
+    with:
+      runner: ${{ vars.RUNNER_TYPE || 'ubuntu-latest' }}
+      python-version: "3.11"
+    secrets: inherit
