@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   ci:
-    uses: Cramraika/.github/.github/workflows/ci-python.yml@main
+    uses: Cramraika/.github/.github/workflows/ci-python.yml@8d85e1021b82757cd4083ab8dbc5e75bac703312 # main
     with:
       runner: ${{ vars.RUNNER_TYPE || 'ubuntu-latest' }}
       python-version: "3.11"
