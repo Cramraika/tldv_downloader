@@ -1,4 +1,17 @@
 {
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "REPO_DIR=\"$CLAUDE_PROJECT_DIR\" /bin/bash \"$CLAUDE_PROJECT_DIR/../platform-docs/scripts/repo-reconcile-from-spine.sh\""
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "deny": [
       "Read(./.env)",
