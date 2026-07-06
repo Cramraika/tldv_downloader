@@ -1,5 +1,8 @@
 # 🎬 TLDV Video Downloader
 
+> ⚠️ **No longer actively maintained (2026-07-06).** This project is archived and kept public as a
+> reference. It still works for its purpose below; community forks and contributions are welcome.
+
 > **Export your tldv.io meeting recordings to local MP4 — single or bulk, parallel, resumable.**
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/Cramraika?logo=github&label=Sponsor)](https://github.com/sponsors/Cramraika)
