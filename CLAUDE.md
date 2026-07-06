@@ -4,6 +4,11 @@
 **Supersedes:** v1 (commit-sha pending S11C verification)
 **Tier:** C (stable utility) — sponsor-ready OSS
 
+**DECOMMISSIONED (2026-07-06).** tldv_downloader is a one-off OSS utility, not an actively-maintained
+product or a deployed service. Kept public as a reference. Its planned transcription roadmap is superseded
+by shared fleet capability. De-tooled: dropped renovate + the automation post-commit hook; kept CI +
+CodeQL (security). Public-repo note: keep internal architecture out of this repo's docs.
+
 ## Claude Preamble
 <!-- VERSION: 2026-06-20-v53 -->
 <!-- SYNC-SOURCE: ~/.claude/conventions/universal-claudemd.md -->
