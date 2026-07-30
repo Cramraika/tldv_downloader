@@ -1,254 +1,210 @@
-# 🎬 TLDV Video Downloader
+# TLDV Downloader
 
-> ⚠️ **No longer actively maintained (2026-07-06).** This project is archived and kept public as a
-> reference. It still works for its purpose below; community forks and contributions are welcome.
+Export your [tldv.io](https://tldv.io) meeting recordings to local MP4 files — one at a time, or a
+whole list in parallel.
 
-> **Export your tldv.io meeting recordings to local MP4 — single or bulk, parallel, resumable.**
-
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/Cramraika?logo=github&label=Sponsor)](https://github.com/sponsors/Cramraika)
-[![Stars](https://img.shields.io/github/stars/Cramraika/tldv_downloader?style=social)](https://github.com/Cramraika/tldv_downloader/stargazers)
 [![License](https://img.shields.io/github/license/Cramraika/tldv_downloader)](./LICENSE)
+[![Stars](https://img.shields.io/github/stars/Cramraika/tldv_downloader?style=social)](https://github.com/Cramraika/tldv_downloader/stargazers)
 [![Issues](https://img.shields.io/github/issues/Cramraika/tldv_downloader)](https://github.com/Cramraika/tldv_downloader/issues)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/Cramraika?logo=github&label=Sponsor)](https://github.com/sponsors/Cramraika)
 
-Download videos from tldv.io at your own pace — keep your recordings for offline watch, archives, or compliance. Single downloads or parallel batch, with smart resume and metadata preservation. Works on Windows, macOS, and Linux.
+> **Maintenance status:** low activity. The tool works as described below, and the repository stays
+> public and open to issues and pull requests. It depends on an undocumented tldv.io endpoint, so it
+> can break without warning if that endpoint changes.
 
-## Who is this for?
+## What it does
 
-- **Sales teams** archiving customer conversations for review
-- **Researchers** collecting interview recordings
-- **Solo operators** keeping a local library of their meetings
-- **Anyone** who doesn't want their recordings locked behind a SaaS subscription
+`tldv_downloader.py` is a single-file, interactive Python script. You give it a tldv.io meeting URL
+and an `Authorization` token copied from your browser. It calls the tldv.io watch-page API to
+resolve the meeting's video stream URL, then shells out to **N_m3u8DL-RE** (preferred) or **FFmpeg**
+(fallback) to pull the stream down to an `.mp4`. Alongside each video it writes a `.json` file
+containing the raw API response for that meeting.
 
-## 💖 Support
+It can also run in a batch mode that downloads several meetings concurrently using a thread pool,
+reusing one auth token for all of them.
 
-If this saves you time, [sponsor on GitHub](https://github.com/sponsors/Cramraika) — your support funds ongoing maintenance and new features (UI wrapper, Whisper transcription, Obsidian export). Or [reach out](https://chinmayramraika.in) about enterprise/custom work.
+### Who it is for
 
-## ✨ Features
+Anyone who wants a local copy of their own tldv.io recordings — for offline viewing, personal
+archives, or retention requirements — rather than leaving them only in the SaaS.
 
-- **Fast Downloads**: Prioritizes N_m3u8DL-RE for parallel segment downloading
-- **Batch Processing**: Download multiple videos simultaneously with configurable workers
-- **Smart Fallback**: Uses FFmpeg if N_m3u8DL-RE is not available
-- **Filename Sanitization**: Automatically handles invalid characters and long names
-- **Session Management**: One auth token works for multiple downloads
-- **Metadata Preservation**: Saves meeting information as JSON files
-- **Cross-Platform**: Works on Windows, macOS, and Linux
-- **Progress Tracking**: Real-time download progress and file size reporting
+### What it is not
 
-## 🚀 Quick Start
+It is not a scraper, a bulk-export service, or a transcription tool. It downloads meetings your
+account can already access, one URL at a time.
 
-### Prerequisites
+## Requirements
 
-1. **Python 3.7+**
-2. **N_m3u8DL-RE** (recommended) or **FFmpeg**
-3. **requests** library
+- **Python 3.7 or newer.** The floor is set by `subprocess.run(capture_output=...)`. CI runs the
+  checks on Python 3.11.
+- **`requests`** — the only Python dependency (`requirements.txt` pins `requests==2.34.2`).
+- **N_m3u8DL-RE or FFmpeg**, on your `PATH`. At least one is required; the script exits with
+  `Neither N_m3u8DL-RE nor ffmpeg is available` if it finds neither.
 
-### Installation
-
-1. **Install Python dependencies:**
-   ```bash
-   pip install requests
-   ```
-
-2. **Install N_m3u8DL-RE (recommended for faster downloads):**
-   - Download from: https://github.com/nilaoda/N_m3u8DL-RE/releases
-   - Extract and add to your system PATH
-   - Or use package manager:
-     ```bash
-     # Windows (using scoop)
-     scoop install n_m3u8dl-re
-     
-     # macOS (using homebrew)
-     brew install n_m3u8dl-re
-     ```
-
-3. **Install FFmpeg (backup option):**
-   ```bash
-   # macOS
-   brew install ffmpeg
-   
-   # Windows (using chocolatey)
-   choco install ffmpeg
-   
-   # Linux (Ubuntu/Debian)
-   sudo apt update && sudo apt install ffmpeg
-   ```
-
-### Usage
-
-1. **Run the script:**
-   ```bash
-   python tldv_downloader.py
-   ```
-
-2. **Get help for auth token:**
-   ```bash
-   python tldv_downloader.py --help
-   ```
-
-## 🔐 Getting Authorization Token
-
-The auth token is tied to your login session and can be reused for multiple downloads:
-
-### Step-by-Step Guide:
-
-1. **Login to TLDV:**
-   - Go to https://tldv.io/ and login
-
-2. **Open Developer Tools:**
-   - Press F12 or right-click → "Inspect"
-
-3. **Find the Network Request:**
-   - Go to "Network" tab
-   - Refresh the page (F5)
-   - In the filter box, type: `watch-page`
-   - Look for: `...meetings/.../watch-page?noTranscript=true`
-
-4. **Copy Authorization Token:**
-   - Click on the request → "Headers" → "Request Headers"
-   - Copy the entire "Authorization" value (starts with "Bearer ")
-
-### Important Notes:
-- ✅ One token works for multiple videos in the same session
-- ⏰ Token expires when you log out or close browser
-- 🔄 Get a fresh token if downloads start failing
-- 💡 Keep browser tab open while downloading
-
-## 📖 Usage Examples
-
-### Single Video Download
+## Install
 
 ```bash
-python tldv_downloader.py
+git clone https://github.com/Cramraika/tldv_downloader.git
+cd tldv_downloader
+pip install -r requirements.txt
 ```
 
-Follow the prompts:
-- Enter TLDV meeting URL
-- Enter authorization token  
-- Choose output directory (optional)
-- Confirm download
-
-### Batch Download (Multiple Videos)
+Then install a downloader backend. N_m3u8DL-RE is preferred because it fetches HLS segments in
+parallel; FFmpeg is used automatically if N_m3u8DL-RE is missing.
 
 ```bash
-python tldv_downloader.py
+# N_m3u8DL-RE — see https://github.com/nilaoda/N_m3u8DL-RE/releases
+brew install n_m3u8dl-re          # macOS
+scoop install n_m3u8dl-re         # Windows
+
+# FFmpeg (fallback)
+brew install ffmpeg                       # macOS
+choco install ffmpeg                      # Windows
+sudo apt update && sudo apt install ffmpeg # Debian/Ubuntu
 ```
 
-Choose batch mode when prompted:
-- Select input method (manual entry or file)
-- Enter URLs or provide text file
-- Enter authorization token (same for all)
-- Set number of parallel workers (1-8)
-- Confirm batch download
+Verify with `N_m3u8DL-RE --version` or `ffmpeg -version`.
 
-### URLs Text File Format
+## Usage
 
-Create a text file with one URL per line:
+The script is **fully interactive** — it prompts for everything it needs. There are no configuration
+flags. The only recognised argument is help:
+
+```bash
+python tldv_downloader.py            # run the tool (prompts for everything)
+python tldv_downloader.py --help     # print the auth-token instructions and exit
+```
+
+`-h`, `--help`, and `help` are equivalent, and all three only print the token guide.
+
+### Single download
+
+```
+$ python tldv_downloader.py
+Batch download mode? (y/N): n
+Enter the TLDV meeting URL: https://tldv.io/app/meetings/681cc00576bb060013e5fbb7
+Enter your Authorization token: Bearer eyJhbGciOi...
+Output directory (press Enter for current):
+Proceed with download? (y/N): y
+```
+
+### Batch download
+
+```
+$ python tldv_downloader.py
+Batch download mode? (y/N): y
+Choose option (1/2): 2
+Enter path to URLs file: ./meetings.txt
+Enter your Authorization token: Bearer eyJhbGciOi...
+Output directory (press Enter for current): ./recordings
+Number of parallel downloads (1-8, default 3): 4
+Proceed with batch download? (y/N): y
+```
+
+Option `1` instead lets you paste URLs one per line, ending with `done`.
+
+The worker count is clamped to the range 1–8; anything outside that range, or any non-numeric input,
+falls back to 3.
+
+### URL list file format
+
+One URL per line. Blank lines are skipped, and lines beginning with `#` are treated as comments.
 
 ```text
-# My TLDV Downloads
+# Q3 customer calls
 https://tldv.io/app/meetings/681cc00576bb060013e5fbb7
 https://tldv.io/app/meetings/582ab11487cc070012d5fa6c
-https://tldv.io/app/meetings/793de22598dd080013f6gb8d
-
-# Comments start with #
-# Empty lines are ignored
 ```
 
-## ⚙️ Configuration Options
+## Getting the authorization token
 
-### Parallel Downloads
-- **Workers**: 1-8 (default: 3)
-- **Recommendation**: 
-  - 3-4 workers for most systems
-  - 2 workers for slower connections
-  - 6-8 workers for high-speed connections
+The script authenticates with a bearer token lifted from your own browser session. There is no
+API key and no login flow.
 
-### Output Structure
+1. Log in at <https://tldv.io> and open the meeting you want.
+2. Open DevTools (F12) and select the **Network** tab.
+3. Reload the page and filter for `watch-page`.
+4. Select the request to `.../meetings/<id>/watch-page?noTranscript=true`.
+5. Under **Request Headers**, copy the full `Authorization` value.
+
+You can paste the value with or without the `Bearer ` prefix — the script adds it if missing. One
+token works for every download in the same session; it stops working when that browser session ends,
+at which point you need a fresh one.
+
+Because the token is entered at a prompt, it is not stored on disk and not read from the
+environment.
+
+## Configuration
+
+There is none. No config file, no environment variables. Everything is answered at the prompts.
+
+The repository ships a `.env.example`, but it is inaccurate — see *Known issues* below. The
+downloader reads no environment variables at all.
+
+## Output
+
+Files land in the directory you specify, or the current working directory if you press Enter.
+
 ```
-output_directory/
-├── 2025-05-08_14-30-29_Meeting_Name.mp4
-├── 2025-05-08_14-30-29_Meeting_Name.json
-├── 2025-05-08_15-45-12_Another_Meeting.mp4
-└── 2025-05-08_15-45-12_Another_Meeting.json
+recordings/
+├── 2025-05-08_14-30-29_Weekly_Sync.mp4
+├── 2025-05-08_14-30-29_Weekly_Sync.json
+├── 2025-05-08_15-45-12_Customer_Call.mp4
+└── 2025-05-08_15-45-12_Customer_Call.json
 ```
 
-## 🔧 Troubleshooting
+The timestamp comes from the meeting's `createdAt` field; if it is missing or does not parse, the
+current time is used instead. Names are sanitised by replacing `< > : " / \ | ? *` with underscores,
+collapsing runs of underscores, trimming leading and trailing underscores and spaces, and truncating
+to 100 characters. A name that sanitises to nothing becomes `TLDV_Meeting`.
 
-### Common Issues
+The `.json` file is the **complete, unmodified watch-page API response** for that meeting. The script
+does not select or reshape fields, so exactly what it contains is whatever tldv.io returns.
 
-**1. "Neither N_m3u8DL-RE nor ffmpeg is available"**
-- Install at least one downloader (see Installation section)
-- Ensure it's added to your system PATH
-- Test with `N_m3u8DL-RE --version` or `ffmpeg -version`
+## Known issues and limitations
 
-**2. "Unauthorized: Invalid auth token"**
-- Get a fresh token from browser
-- Ensure you're logged into tldv.io
-- Copy the complete "Authorization" header value
+These are real behaviours in the current source, not hypotheticals.
 
-**3. "Meeting not found"**
-- Check if URL is correct
-- Ensure you have access to the meeting
-- Try refreshing the browser page first
+- **Batch mode always reports failure.** `download_multiple_videos()` prints a correct per-file
+  summary but returns nothing, so the caller's success check never passes and you always see
+  `Batch download failed!` at the end — even when every download succeeded. Trust the per-file lines
+  and the files on disk, not the final message.
+- **No resume.** An interrupted download restarts from zero. The FFmpeg path passes `-y` and
+  overwrites any existing output file. N_m3u8DL-RE is invoked with `--download-retry-count 3`, which
+  retries segments within a run but does not resume across runs.
+- **A spurious FFmpeg error appears at startup.** Availability detection probes `ffmpeg --version`
+  before `ffmpeg -version`. The first is not a valid FFmpeg flag, so you will see
+  `ffmpeg not working properly` immediately followed by `ffmpeg is available`. The first line is
+  noise.
+- **Metadata is written before the download runs.** A failed or cancelled download still leaves a
+  `.json` file behind with no matching `.mp4`.
+- **Parallel output is interleaved.** Each worker prints its own progress and re-runs the backend
+  detection, so with more than one worker the console output from different downloads is mixed
+  together.
+- **Downloads time out after one hour.** The per-download subprocess timeout is fixed and not
+  configurable.
+- **The API endpoint is undocumented.** The script calls
+  `https://gw.tldv.io/v1/meetings/<id>/watch-page?noTranscript=true`, which is an internal tldv.io
+  endpoint. If it changes, the tool breaks.
+- **Meeting IDs are taken from the last URL path segment** and must be at least 10 characters. URLs
+  in another shape will be rejected.
+- **`fleet_stt_client.py` is unrelated to the downloader.** It is not imported by
+  `tldv_downloader.py` and calls an internal service that is not publicly reachable. Ignore it.
 
-**4. Downloads fail after working initially**
-- Token has expired - get a fresh one
-- Check your internet connection
-- Verify meeting is still accessible
+Common failures: `Unauthorized: Invalid auth token` means the token expired — get a fresh one.
+`Meeting not found` means the ID is wrong or your account cannot access that meeting.
 
-### Performance Tips
+## Responsible use
 
-- **Use N_m3u8DL-RE** for significantly faster downloads
-- **Parallel workers**: Start with 3, adjust based on performance
-- **Network**: Stable connection recommended for batch downloads
-- **Storage**: Ensure sufficient disk space (videos can be large)
+Download only recordings you are entitled to, and stay within tldv.io's terms of service. This tool
+is intended for personal and organisational backup of your own meetings, not for bulk harvesting.
 
-## 🎯 Advanced Features
+## Contributing
 
-### Filename Sanitization
-- Removes invalid characters: `<>:"/\|?*`
-- Handles long filenames (truncates to 100 chars)
-- Preserves readable format: `YYYY-MM-DD_HH-MM-SS_Meeting_Name.mp4`
+Issues and pull requests are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-### Metadata Preservation
-Each download creates a JSON file with:
-- Meeting information
-- Participant details
-- Recording timestamps
-- Original API response
+## License
 
-### Error Recovery
-- Automatic retry on network failures
-- Graceful handling of invalid URLs
-- Detailed error reporting
-- Partial download recovery
+MIT © 2026 Vagary Labs LLP. See [LICENSE](./LICENSE).
 
-## 📊 Performance Comparison
-
-| Downloader | Speed | Features | Compatibility |
-|-----------|-------|----------|---------------|
-| **N_m3u8DL-RE** | ⭐⭐⭐⭐⭐ | Parallel segments, advanced options | Modern |
-| **FFmpeg** | ⭐⭐⭐ | Reliable, universal support | Universal |
-
-## 🤝 Contributing
-
-Feel free to submit issues, feature requests, or pull requests!
-
-## 📄 License
-
-MIT — free to use, modify, and distribute. See [LICENSE](./LICENSE). © 2026 Vagary Labs.
-
-Please use responsibly and respect tldv.io's terms of service (see Disclaimer below).
-
-## ⚠️ Disclaimer
-
-- Use responsibly and in accordance with tldv.io's terms of service
-- Ensure you have permission to download the content
-- This tool is for personal use and backup purposes
-- Large-scale automated downloading may violate terms of service
-
----
-
-**Made with ❤️ for the community**
-
-*Last updated: August 2025*
+A Vagary Labs project.
