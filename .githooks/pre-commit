@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --- fleet secret-scan gate (managed by platform-docs/scripts/install-secret-scan-hook.py) ---
+# Secret leakage is the most common early breach, and a leaked key is unrecoverable once pushed.
+# FAIL-CLOSED: if gitleaks is missing this BLOCKS the commit rather than warning. A gate that
+# silently disables itself when the tool is absent is not a gate — and "absent" is exactly the
+# state a new machine or a fresh clone starts in.
+if command -v gitleaks >/dev/null 2>&1; then
+    if ! gitleaks protect --staged --redact --no-banner; then
+        echo "" >&2
+        echo "BLOCKED: gitleaks found a secret in staged content." >&2
+        echo "Remove it from the STAGED DIFF, not just the working tree — a secret that reaches a" >&2
+        echo "commit is compromised even if a later commit deletes it. Rotate if it was ever pushed." >&2
+        echo "False positive: add a narrow rule to .gitleaks.toml, never a blanket --no-verify habit." >&2
+        exit 1
+    fi
+else
+    echo "BLOCKED: gitleaks is not installed, so the secret-scan gate cannot run." >&2
+    echo "Install it (brew install gitleaks) — this gate fails closed by design." >&2
+    exit 1
+fi
+# --- end fleet secret-scan gate ---
+
+exit 0
